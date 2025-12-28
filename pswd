@@ -8,57 +8,70 @@ import random
 import string
 
 parser = argparse.ArgumentParser(
-    prog='pswd',
+    prog="pswd",
     description="Generate a strong password.",
-    epilog='https://github.com/hemmouda/pswd')
+    epilog="https://github.com/hemmouda/pswd",
+)
 
 DEFAULT_LENGTH = 16
 parser.add_argument(
-    '-l', '--length',
+    "-l",
+    "--length",
     type=int,
     default=DEFAULT_LENGTH,
-    help=f"Length of the password (default: {DEFAULT_LENGTH})"
+    help=f"Length of the password (default: {DEFAULT_LENGTH})",
 )
 
-parser.add_argument(
-    '--no-special',
-    action='store_true',
-    help="Disable special characters (by default, special characters are used)"
+charset_group = parser.add_mutually_exclusive_group()
+charset_group.add_argument(
+    "--no-special",
+    action="store_true",
+    help="Disable special characters (by default, special characters are used)",
+)
+charset_group.add_argument(
+    "--digits-only", action="store_true", help="Use digits only (0-9)"
 )
 
 group = parser.add_mutually_exclusive_group()
 group.add_argument(
-    '--no-copy',
-    action='store_true',
-    help="Do not automatically copy the password to the clipboard"
+    "--no-copy",
+    action="store_true",
+    help="Do not automatically copy the password to the clipboard",
 )
 group.add_argument(
-    '--hide',
-    action='store_true',
-    help="Hide the password output (password will be copied to clipboard)"
+    "--hide",
+    action="store_true",
+    help="Hide the password output (password will be copied to clipboard)",
 )
 
 args = parser.parse_args()
 
 
-def generate(length, use_special):
-    chars = string.ascii_letters + string.digits
-    if use_special:
-        chars += string.punctuation
-    return ''.join(random.choice(chars) for _ in range(abs(length)))
+def generate(length, digits_only, use_special):
+    if digits_only:
+        chars = string.digits
+    else:
+        chars = string.ascii_letters + string.digits
+        if use_special:
+            chars += string.punctuation
+    return "".join(random.choice(chars) for _ in range(abs(length)))
 
 
-use_special = not args.no_special
-password = generate(args.length, use_special)
+password = generate(
+    args.length, digits_only=args.digits_only, use_special=not args.no_special
+)
 
 if not args.hide:
     print(password)
-    
+
 if not args.no_copy:
     try:
         import pyperclip
+
         pyperclip.copy(password)
         print("Copied to clipboard.")
     except ImportError:
-        print("pyperclip is not installed. Run 'python -m pip install pyperclip' to install it.")
+        print(
+            "pyperclip is not installed. Run 'python -m pip install pyperclip' to install it."
+        )
         exit(1)
